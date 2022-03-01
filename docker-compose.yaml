@@ -1,0 +1,39 @@
+version: '3.3'
+
+services:
+  lb:
+    image: jfahrer/lb:v3
+    environment:
+      - PROXY_UPSTREAM=webapp:3333
+    ports:
+      - 80:80
+
+  webapp:
+    image: storing-requests:latest
+    build: 
+      context: .
+    volumes:
+      - .:/app
+    environment:
+      - POSTGRES_USER=demo
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=demo
+      - POSTGRES_HOST=pg
+    command: node ./src/app.js
+
+  pg:
+    image: postgres:9.6-alpine
+    environment:
+      - POSTGRES_USER=demo
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=demo
+    volumes:
+      - ./sql/create_table.sql:/docker-entrypoint-initdb.d/create_table.sql
+
+  client:
+    image: jfahrer/checker-u-dev-a3:latest
+    environment:
+      - POSTGRES_USER=demo
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=demo
+      - POSTGRES_HOST=pg
